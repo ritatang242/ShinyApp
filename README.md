@@ -1,6 +1,6 @@
 # 這裡收集了我做的Shiny App
 
-One Paragraph of project description goes here
+
 
 ## 1. Leaflet Minichart 套件
 
