@@ -1,0 +1,294 @@
+---
+title: "產品設計與定價策略"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: default
+    css: data/JH.css
+    social: menu # share to other in social media
+    source_code: embed 
+    logo: data/nsysu48.png # header上的小logo
+    favicon: data/nsysu48.png # browser上title旁邊的小logo
+runtime: shiny
+---
+
+```{r}
+pacman::p_load(magrittr,shiny,shinyWidgets,shinythemes,flexdashboard,highcharter,DT,dplyr)
+load("data/W2.rdata")
+UT = function(v) rowSums(W[, c(1, v + c(1,4,7,10))])
+PC = function(pd) {
+  2.5 + sum(sapply(1:length(att), 
+                   function(i) costs[[i]][pd[i]] )) }
+costs = list(bitter =  c(0.3, 0.2, 0.1),
+             variety = c(0.9, 0.5, 0.2),
+             kind  =   c(0.5, 0.3, 0.6),
+             arom =    c(0.7, 0.4) )
+pqr = function(p, m, u, prob=FALSE) {
+  if(prob) 
+    q = colSums(sapply(p, function(x) 1/(1+exp(x-u)) )) 
+  else  
+    q = sapply(p, function(x) sum(u > x) )  # quantity
+  pf = q * (p-m); ip = which.max(pf)        # profit
+  r  = q * p;     ir = which.max(r)         # revenue
+    par(cex=0.7,mar=c(5,4,4,3))
+  plot(p,q,type='l',main="Demand Cruve",xlab="price",ylab="qty",ylim=c(0,80),
+       lwd=3, col="gold")
+  abline(v=p[ip],col='pink'); abline(v=p[ir],col='cyan')
+  abline(h=seq(20,80,20),lty=3,col='grey')
+  plot(p, r, type='l',main="Revenue",ylab="",ylim=c(0,300),font.lab=2,
+       lwd=3, col="gold", xlab=sprintf(
+         "P = %.1f, Q = %.1f, R = %.1f, Pf = %.1f", 
+         p[ir], q[ir], r[ir], pf[ir] ))
+  abline(v=p[ir],col='cyan');
+  abline(h=seq(50,250,50),lty=3,col='grey')
+  plot(p, pf, type='l',main="Profit",ylab="",ylim=c(0,110),font.lab=2,
+       lwd=3, col="gold", xlab=sprintf(
+         "P = %.1f, Q = %.1f, R = %.1f, Pf =%.1f",
+         p[ip], q[ip], r[ip], pf[ip] )  )
+  abline(v=p[ip],col='pink');
+  abline(h=seq(20,100,20),lty=3,col='grey')
+  text(3.5,100,sprintf("MC = %.1f",m),pos=4,font=2)
+}
+att = apply(profiles,2,max)
+attl = unlist(sapply(1:length(att), function(x) rep(x , att[x])))
+```
+
+
+
+
+產品組合模擬 {data-orientation=rows}
+=====================================
+
+Input {.sidebar data-width=350px}
+-------------------------------------
+### 選擇產品屬性
+```{r}
+hr()
+
+chooseSliderSkin("Modern")
+
+prettyRadioButtons(
+  "A1", "苦味", 
+  choices = list("低"=1, "中"=2, "高"=3),
+  selected = 1, inline=T, icon=icon("check"), 
+  status="primary", animation="jelly")
+
+hr()
+
+prettyRadioButtons(
+  "A2", "茶種", 
+  choices = list("紅茶"=1, "綠茶"=2, "博士茶"=3),
+  selected = 1, inline=T, icon=icon("check"), 
+  status="primary", animation="jelly")
+
+hr()
+
+prettyRadioButtons(
+  "A3", "包裝", 
+  choices = list("茶包"=1, "茶末"=2, "茶葉"=3),
+  selected = 1, inline=T, icon=icon("check"), 
+  status="primary", animation="jelly")
+
+hr()
+
+prettyRadioButtons(
+  "A4", "外加香料", 
+  choices = list("無"=1, "有"=2),
+  selected = 1, inline=T, icon=icon("check"), 
+  status="primary", animation="jelly")
+
+hr()
+
+prettyRadioButtons(
+  "Prob", "平滑需求函數", 
+  choices = list("關閉"=0, "使用"=1),
+  selected = 1, inline=T, icon=icon("check"), 
+  status="primary", animation="jelly")
+
+```
+
+
+<p>
+<img src="cm_nsysu.png" alt="CM.NSYSU"  height="92" align="left"> <br>
+[中山管理學院 商業大數據平台](https://bap.cm.nsysu.edu.tw/) <br>
+<p style="font-size:11px">唐思琪、卓雍然</p> <br>
+</p>
+
+Row {.tabset .tabset-fade data-height=15%}
+-------------------------------------
+### 練習1
+用APW找出來的最佳產品規格，其最佳價格是？
+
+### 練習2
+它會帶來多大的銷售量、營收和獲利？
+
+### 練習3
+試著使用模擬程式，找尋可以產生最大獲利和營收的產品規格和價格？
+
+### 練習4
+它跟用APW找出來的最佳產品規格是一樣的嗎？  <br>
+這個練習的策略意涵是什麼？
+
+Row { data-height=85% }
+-------------------------------------
+### 該組合的產品效用的分佈、需求曲線、營收曲線及獲利曲線
+```{r}
+renderPlot({
+ pd1 = as.integer(c(input$A1,input$A2,input$A3,input$A4)) # 產品設計 # input回傳是字串型態所以要改
+ ut1 = UT(pd1)
+ hist(ut1)
+ par(mfcol=c(2,2),cex=0.7,mar=c(5,3,4,3))
+ hist(ut1,-5:13,main="Distribution of Utility",xaxt='n',col='gray',
+      border='white',xlab="Utility",ylab="",xlim=c(-4,14))
+ axis(1,at=seq(-4,14,2))
+ pqr(seq(3.5,11,0.1),PC(pd1),ut1,input$Prob == "1") # 價格範圍
+})
+```
+
+
+
+
+所有產品組合 {data-orientation=rows }
+=====================================
+
+Row {.tabset .tabset-fade data-width=30%}
+-------------------------------------
+
+### 變數介紹
+
+我們還可以寫一段程式，把所有可能的產品(3x3x3x2=54)掃過一遍，把每一個可能產品的最佳營收和獲利都找出來，放在 X 這個矩陣裡面。 <br>
+
+<p class="wwl">
+<span style="font-size:16px">`r "\U1F5FF"` 變數介紹</span><br>
+&emsp; ▪ `v1`~`v4`：代表各個產品屬性（苦味、茶種、包裝、外加香料）<br>
+&emsp; ▪ `ut`：產品對消費者的效用 <br>
+&emsp; ▪ `cost`：產品的邊際價格 <br>
+&emsp; ▪ ︎`p1`：最大營收下的產品價格<br>
+&emsp; ▪ ︎`q1`：最大營收下的產品數量 <br>
+&emsp; ▪ ︎`r1`：最大營收下的營收 <br>
+&emsp; ▪ ︎`pf1`：最大營收下的獲利 <br>
+&emsp; ▪ `p2`：最大獲利下的產品價格<br>
+&emsp; ▪ `q2`：最大獲利下的產品數量 <br>
+&emsp; ▪ `r2`：最大獲利下的營收 <br>
+&emsp; ▪ `pf2`：最大獲利下的獲利 <br>
+</p class="wwl">
+
+### 練習1
+
+現在，利用下面的表格進行排序： <br>
+1. 請你試著找出最大營收(r1)的產品組合為何？ <br>
+2. 最大獲利(pf2)的產品呢？
+
+
+### 練習2
+
+通常公司的目標都不只是將營收、獲利最大化這麼簡單。 <br>
+請問在不虧本前提下依最大營收排序？
+
+### 練習3
+
+滲透率30%以上依最大獲利排序？
+
+###`r "\U1F4A1"`問題討論 
+
+現實的狀況是，你常常需要在目標不明確的狀況下做策略規劃：
+
+<p class="qiz" >
+1. 請試著自己設定營運目標，找到實現這一個目標的最佳策略。 <br>
+2. 跟大家分享你的目標和策略，和它們背後的邏輯。  <br>
+3. 最後再想看看，老闆為什麼常常不告訴你明確的目標，就叫你做策略規劃呢？
+</p class="qiz">
+
+
+Row {.tabset .tabset-fade data-width=70%}
+-------------------------------------
+
+
+
+
+```{r}
+pds = as.matrix(expand.grid(1:3,1:3,1:3,1:2))
+X = t(apply(pds, 1, function (v) {
+  c = PC(v)
+  u = UT(v)
+  X = t( sapply(seq(3,10,0.1), function (p) {
+    q = sum(u > p)
+    c(p, q, q * p, q * (p - c)) }) )
+  c(mean(u), c, X[which.max(X[,3]),], X[which.max(X[,4]),])
+}))
+X = data.frame(cbind(pds,X))
+colnames(X) = c('v1','v2','v3','v4',  # product spec
+                'ut',                 # average utility of the product
+                'cost',               # cost
+                'p1','q1','r1','pf1', # price, quantity, revenue, profit at max. revenue
+                'p2','q2','r2','pf2'  # price, quantity, revenue, profit at max. porfit
+                )
+
+
+renderDataTable({
+ datatable(X %>% round(digits=2), height="200px")
+})
+```
+
+
+
+```{r}
+# renderDataTable({
+#  datatable( subset(X[order(- X$r1),], pf1>0)[,-c(11:14)] %>% round(digits=2), height="200px") 
+# })
+```
+
+
+```{r}
+# renderDataTable({
+#  datatable( subset(X[order(- X$pf2),], q2>30)[,-c(7:10)] %>% round(digits=2), height="150px") 
+# })
+```
+
+
+
+所有產品組合視覺化 {data-orientation=column}
+=====================================
+
+Column {data-width=30%}
+-------------------------------------
+### 問題討論
+
+<h4>【練習1】</h4>
+<p class="qiz" >
+接下來，我們將所有產品的最佳營收和獲利一起畫在同一個平面上。 <br>
+請大家檢討一下你們的策略，你會想要調整你的策略嗎？如何調整呢？
+</p class="qiz" >
+
+
+<h4>【練習2】</h4>
+<p class="qiz" >
+在多重目標的情境之下，什麼樣的策略才是合理的策略？ <br>
+合理的策略要有什麼條件呢？ 
+</p class="qiz" >
+
+
+<h4>【練習3】</h4>
+<p class="qiz" >
+你可以圖中辨識出哪一些是產品是「合理」的嗎？
+</p class="qiz" >
+
+Column { data-width=70%}
+-------------------------------------
+
+###{}
+```{r}
+df = data.frame(revenue=c(X$r1,X$r2),profit=c(X$pf1,X$pf2),
+                p=c(X$p1,X$p2),q=c(X$q1,X$q2),
+                opt=c(rep('opt.revenue',nrow(X)),rep('opt.profit',nrow(X))),
+                lab=rep(apply(X[,1:4],1,paste0,collapse=''),2)  )
+hchart(df, "scatter", hcaes(x=revenue, y=profit, group=opt, lab, p, q)) %>%
+  hc_plotOptions(series=list(allowPointSelect=T)) %>%
+  hc_chart(zoomType = "xy") %>% hc_add_theme(hc_theme_flat()) %>%
+  hc_tooltip(headerFormat = "",valueDecimals=1,borderWidth=2,
+    hideDelay=100,useHTML=T,padding=3,
+    pointFormat="<center><b>({point.lab})</b></center> price: {point.p}<br>
+                 qty: {point.q}<br> RV: {point.x}<br> PF: {point.y}") %>%
+  hc_colors(hex_to_rgba(c('darkgreen','orange'), alpha = 0.65)) %>%
+  hc_legend(floating=T,align='left',verticalAlign='bottom')
+```
+
