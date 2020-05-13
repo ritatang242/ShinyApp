@@ -4,7 +4,7 @@
 
 ## 1. Leaflet Minichart 套件
 
-![Demo1-法國各地區發電方式](https://github.com/ritatang242/ShinyApp/blob/master/Demo/leaflet_minicharts.png) <br>
+![Demo1-法國各地區發電方式](https://github.com/ritatang242/ShinyApp/blob/master/Demo/leaflet_minicharts_france.png) <br>
 [Play the app](https://ba.cm.nsysu.edu.tw:4950/tonychuo/PwrProd.Rmd) <br>
 
 <br>
