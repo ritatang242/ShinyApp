@@ -13,7 +13,7 @@
 
 ## 2. Leaflet Minichart 套件
 
-![Demo1-法國各地區發電方式](https://github.com/ritatang242/ShinyApp/blob/master/Demo/leaflet_minicharts_france.png) <br>
+![Demo1-法國各地區發電方式](https://github.com/ritatang242/ShinyApp/blob/master/Demo/leaflet_minicharts.png) <br>
 
 以Shiny Dashboard改寫自 [rte-antares-rpackage](https://github.com/rte-antares-rpackage/leaflet.minicharts) 的 leaflet.minicharts <br>
 想了解更多Leaflet功能，請參考: [Leaflet套件介紹](https://rpubs.com/RitaTang/leaflet)
