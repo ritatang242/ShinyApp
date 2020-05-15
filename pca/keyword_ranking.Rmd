@@ -1,0 +1,63 @@
+---
+title: 競爭者分析：關鍵字排名表現
+author: By 唐思琪
+output: 
+  flexdashboard::flex_dashboard:
+    theme: flatly
+    social: menu
+    source_code: embed
+runtime: shiny
+---
+
+```{r}
+require(shiny)
+require(shinyWidgets)
+require(tidyverse)
+require(highcharter)
+require(plotly)
+
+load("keywords.rdata")
+# source("Leadership_DM/bipcx.R")
+```
+
+
+PCA主成份分析
+=====================================
+
+Inputs {.sidebar data-width=300}
+-------------------------------------
+```{r}
+h5("說明：")
+h5("將公司投射到關鍵字(縮減)空間，比較各公司在不同主題關鍵字的排名表現。")
+hr()
+
+CT = c("CSR","EM","FS","IS","LT","QM","SCM","SV")
+pickerInput("CT", "關鍵字類別", choices = CT, 
+            options = list(style = "btn-success")) # 樣式
+chooseSliderSkin('Shiny', color = "#1abc9c")
+#sliderInput("N", "關鍵字數量：", 1, 100, value=10, 1)
+```
+
+
+Row
+-------------------------------------
+### 各公司的SEO策略空間
+```{r warning=FALSE, message=FALSE}
+data = reactive({
+  table = df %>% filter(category == input$CT)
+  table[,c(3:7)] = sapply(table[,c(3:7)], as.numeric)
+  pca_rowname = table$keyword # shiny的rowname會被洗掉所以先記起來
+  table_inverse = 100-table[,-c(1:2)]  # 將排名倒過來
+  table_no_zero = table_inverse %>% select_if(~ sum(.) != 0) # 去除排名皆為100以後的
+  mx = t(table_no_zero)/rowSums(t(table_no_zero)) # 轉置(obs: company; vars: keywords) # 正規化
+  colnames(mx) = pca_rowname # 還原關鍵字label
+  return(mx)
+})
+
+renderHighchart({
+  mx = data()
+  #bipcx(PCA(mx), 1, 2, nvar=input$N, nobs=ncol(mx), main=paste0(input$CT,"類關鍵字排名表現"))
+  hchart(prcomp(mx, T))
+    })
+```
+
