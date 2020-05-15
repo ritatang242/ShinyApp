@@ -1,13 +1,18 @@
 # 這裡收集了我做的Shiny App
 
 
-## 1. Conjoint Analysis
+## 1. PCA Analysis
+[Play the app](https://ritatang.shinyapps.io/keyword_ranking/) <br>
+![Demo1](https://github.com/ritatang242/ShinyApp/blob/master/Demo/pca.png) <br>
 
 
+## 2. Conjoint Analysis
+
+[Play the app](https://ritatang.shinyapps.io/Conjoint/) <br>
 ![Demo1](https://github.com/ritatang242/ShinyApp/blob/master/Demo/conjoint1.png) <br>
 ![Demo2](https://github.com/ritatang242/ShinyApp/blob/master/Demo/conjoint2.png) <br>
 ![Demo3](https://github.com/ritatang242/ShinyApp/blob/master/Demo/conjoint3.png) <br>
-[Play the app](https://ritatang.shinyapps.io/Conjoint/) <br>
+
 
 改編自[聯合分析電子書](https://bap.cm.nsysu.edu.tw/conjoint_book/index.html) 
 
