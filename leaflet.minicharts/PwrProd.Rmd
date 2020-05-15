@@ -1,0 +1,79 @@
+---
+title: "法國各地區發電方式"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    theme: flatly
+    social: menu
+    source_code: embed 
+runtime: shiny
+---
+
+```{r}
+require(dplyr)
+require(shinyWidgets)
+require(leaflet)
+require(leaflet.minicharts)
+
+data("eco2mix")
+load("regions.rda")
+
+# Remove data for the whole country
+prodRegions <- eco2mix %>% filter(area != "France")
+
+# Production columns
+prodCols <- names(prodRegions)[6:13]
+
+# Create base map
+tilesURL = paste0(
+  "http://server.arcgisonline.com/ArcGIS/rest/services/Canvas/",
+  "World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}")
+
+basemap <- leaflet(width = "100%", height = "400px") %>%
+  addTiles(tilesURL) %>%
+  addPolylines(data = regions, weight = 1, color = "brown")
+```
+
+Input {.sidebar data-width=250}
+-------------------------------------
+```{r}
+h6("選擇發電類型後，圖形將會改變。"); hr()
+selectInput("prods", "發電類型", choices = prodCols, multiple = TRUE)
+selectInput("type", "圖表種類", choices = c("長條圖"="bar","圓餅圖"="pie", "極區圖"="polar-area",  "極半徑圖"="polar-radius"))
+awesomeCheckbox("labels", 
+  label = "顯示數值", 
+  value = TRUE)
+```
+<br>
+
+Row1 
+-------------------------------------
+### 2013-2017各月法國電力變化 {data-width=76%}
+```{r}
+# create a ui interaction:
+leafletOutput("map")
+
+# render the ui:
+output$map = renderLeaflet({
+  basemap %>% addMinicharts(
+    prodRegions$lng, prodRegions$lat, layerId = prodRegions$area,
+    width = 45, height = 45
+    ) })
+
+observe({
+  if (length(input$prods) == 0) { data <- 1 } else 
+    { data <- prodRegions[, input$prods] }
+  maxValue <- max(as.matrix(data))
+
+  leafletProxy("map") %>% updateMinicharts(
+    prodRegions$area, chartdata = data, maxValues = maxValue,
+    type = ifelse(length(input$prods) < 2, "polar-area", input$type),
+    time = prodRegions$month, showLabels = input$labels
+    )
+})
+
+
+```
+
+
+
