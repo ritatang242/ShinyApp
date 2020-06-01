@@ -3,7 +3,7 @@
 
 ## 1. PCA Analysis
 [Play the app](https://ritatang.shinyapps.io/keyword_ranking/) <br>
-![Demo1](https://github.com/ritatang242/ShinyApp/blob/master/Demo/pca.png) <br>
+![Demo1](https://ritatang242.github.io/ShinyApp/Demo/pca.png) <br>
 
 
 ## 2. Conjoint Analysis
